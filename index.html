@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Wins-First CFB Top-25 — Methodology & Results</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Transparent, wins-first college football Top-25 ranking model using week-of-game Coaches Poll ranks, P4/G5 weighting, SOS scaling, and diminishing returns on unranked wins." />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #111111;
+      --muted: #555555;
+      --rule: #e6e6e6;
+      --accent: #0b5fff;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      --maxw: 920px;
+    }
+    html, body { background: var(--bg); color: var(--ink); margin: 0; padding: 0; }
+    body { font-family: var(--sans); line-height: 1.6; }
+    header, footer { border-bottom: 1px solid var(--rule); }
+    footer { border-top: 1px solid var(--rule); border-bottom: 0; }
+    .container { max-width: var(--maxw); margin: 0 auto; padding: 24px 16px; }
+    h1, h2, h3 { line-height: 1.25; margin: 0.6em 0 0.3em; }
+    h1 { font-size: 1.9rem; }
+    h2 { font-size: 1.35rem; margin-top: 1.75rem; }
+    h3 { font-size: 1.1rem; margin-top: 1.2rem; }
+    p, li { font-size: 1rem; }
+    .muted { color: var(--muted); }
+    .pill { display: inline-block; background: #f4f7ff; color: #183a9e; border: 1px solid #dfe7ff; border-radius: 999px; padding: 2px 10px; font-size: 0.85rem; }
+    .rule { height: 1px; background: var(--rule); border: 0; margin: 1.5rem 0; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 900px) { .grid-2 { grid-template-columns: 1.1fr 0.9fr; } }
+    code, pre { font-family: var(--mono); }
+    pre { background: #fafafa; border: 1px solid var(--rule); padding: 14px; border-radius: 8px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    th, td { border-bottom: 1px solid var(--rule); padding: 8px 6px; text-align: left; }
+    th { background: #fcfcfc; font-weight: 600; }
+    .badge { font-size: 0.78rem; border: 1px solid var(--rule); padding: 2px 8px; border-radius: 999px; }
+    .kbd { font-family: var(--mono); font-size: 0.85rem; background: #f7f7f7; border: 1px solid var(--rule); padding: 0 6px; border-radius: 4px; }
+    .callout { border-left: 3px solid var(--accent); padding: 10px 12px; background: #f9fbff; }
+    details summary { cursor: pointer; font-weight: 600; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+  <!-- MathJax for LaTeX -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="pill">Wins-First CFB Top-25</div>
+      <h1>Methodology, Formulas, Algorithm & Weekly Results</h1>
+      <p class="muted">An objective, reproducible ranking model: week-of-game <em>Coaches Poll</em> ranks, Power-4 weighting, schedule strength, and diminishing returns on unranked wins.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section>
+      <h2>Abstract</h2>
+      <p>
+        I noticed that traditional media polls can be reputation-driven. This model replaces subjective ranking with a
+        <strong>wins-first</strong>, transparent scoring system. Each game receives a value based on
+        (i) opponent quality at the week of play via the <em>Coaches Poll</em>, (ii) location and capped margin,
+        (iii) Power-4 vs. Group-of-5 tier for <em>unranked</em> opponents, and (iv) a season-level strength-of-schedule multiplier.
+      </p>
+    </section>
+
+    <hr class="rule" />
+
+    <section class="grid grid-2">
+      <div>
+        <h2>Core Ideas</h2>
+        <ul>
+          <li><strong>Week-of-game ranks:</strong> Upsets valued when they occurred, not retroactively.</li>
+          <li><strong>Conference tiering:</strong> Unranked P4 wins &gt; unranked G5 wins; G5 losses sting more.</li>
+          <li><strong>SOS scaling:</strong> Season-level multiplier based on average opponent quality.</li>
+          <li><strong>Parsimony:</strong> Few transparent knobs; no black box.</li>
+        </ul>
+        <div class="callout">
+          <strong>Bias note:</strong> Journalist voting can overweight legacy brands. We rely on the Coaches Poll only as a
+          <em>signal</em>, and only at week-of-game.
+        </div>
+      </div>
+      <div>
+        <h2>Tooling</h2>
+        <p><span class="badge">Stack</span> Python, Pandas, <code>cfbd</code> API, python-dotenv, Certifi</p>
+        <p>Manual cadence: I will maunaly update as games complete.</p>
+      </div>
+    </section>
+
+    <hr class="rule" />
+
+    <section>
+      <h2>Formulas</h2>
+
+      <h3>Opponent Rank Quality</h3>
+      <p>
+        Rank quality \(rq\) (1 is best) maps to \([0,1]\):
+      </p>
+      <p>
+        $$ rq(r) = 1 - \frac{r - 1}{24} \quad \text{for } r \in \{1,\dots,25\}. $$
+      </p>
+
+      <h3>Per-Game Value</h3>
+      <p><strong>Win:</strong></p>
+      <p>
+        $$ \text{base}_W = \bigl(1 + \alpha_W \cdot Q_{\text{opp}}\bigr)\cdot L \cdot \bigl(1 + \gamma \cdot \min(m, M)\bigr) $$
+        $$ \text{value}_W =
+            \begin{cases}
+              \text{base}_W \cdot s_{\text{P4}} \cdot \bigl(1 + \beta \cdot rq\bigr), & \text{if opp unranked P4} \\\\
+              \text{base}_W \cdot s_{\text{G5}} \cdot \bigl(1 + \beta \cdot rq\bigr), & \text{if opp unranked G5/Ind} \\\\
+              \text{base}_W \cdot \bigl(1 + \beta \cdot rq\bigr), & \text{if opp ranked}
+            \end{cases}
+        $$
+      </p>
+
+      <p><strong>Loss:</strong></p>
+      <p>
+        $$ \text{base}_L = \bigl(B + \alpha_L \cdot Q_{\text{opp}}\bigr)\cdot L \cdot \max\bigl(\rho,\; 1 - \lambda \cdot \min(m,M)\bigr) $$
+        $$ \text{value}_L =
+            \begin{cases}
+              -\text{base}_L \cdot k_{\text{P4}} \cdot \bigl(1 - \delta \cdot rq\bigr), & \text{if opp unranked P4} \\\\
+              -\text{base}_L \cdot k_{\text{G5}} \cdot \bigl(1 - \delta \cdot rq\bigr), & \text{if opp unranked G5/Ind} \\\\
+              -\text{base}_L \cdot \bigl(1 - \delta \cdot rq\bigr), & \text{if opp ranked}
+            \end{cases}
+        $$
+      </p>
+
+      <ul class="muted">
+        <li>\(Q_{\text{opp}}\): opponent quality (Coaches Poll or fallback SRS/win%).</li>
+        <li>\(L\): location multiplier (Road &gt; Neutral &gt; Home).</li>
+        <li>\(m\) margin, capped by \(M\).</li>
+        <li>\(rq\): rank quality for week-of-game rank.</li>
+      </ul>
+
+      <h3>Season-Level Adjustments</h3>
+      <p>
+        SOS multiplier (with average opponent quality \(\overline{Q}\)):
+        $$ \text{SOS}(\overline{Q}) = 0.50 + 1.10 \cdot \overline{Q}. $$
+      </p>
+      <p>
+        Diminishing returns on unranked wins (starting after the first):
+        $$ d(n) = 0.93^{\max(0, n-1)}. $$
+      </p>
+      <p><strong>Final:</strong></p>
+      <p>
+        $$ \text{WinsScore}(t) = \Bigl(\sum_{g \in \text{games}(t)} \text{value}_g\Bigr)
+           \cdot \text{SOS}\!\left(\overline{Q}_{t}\right)
+           \cdot d\!\left(\text{UnrankedWins}_t\right)
+           + \kappa \cdot \text{RankedWins}_t \cdot \bigl(0.7 + 0.3\,\overline{Q}_{\text{ranked},t}\bigr). $$
+      </p>
+    </section>
+
+    <hr class="rule" />
+
+    <section>
+      <h2>Algorithm Design (Step-By-Step)</h2>
+      <ol>
+        <li><strong>Data:</strong> Pull FBS games for weeks 1..W; duplicate rows home/away with result, location, margin.</li>
+        <li><strong>Week-specific Coaches Poll:</strong> For each week, map team → \(Q\) and rank → \(rq\).</li>
+        <li><strong>Fallbacks:</strong> If no poll for opponent that week, use normalized SRS; else shrunk win% through week.</li>
+        <li><strong>Per-game scoring:</strong> Apply equations above; special handling for unranked P4 vs G5/Ind.</li>
+        <li><strong>Season aggregation:</strong> Sum game values; multiply by SOS; apply unranked-win decay; add ranked-win kicker.</li>
+        <li><strong>Ranking:</strong> Sort by <em>WinsScore</em> (tie-break by tougher average opponent quality).</li>
+      </ol>
+    </section>
+
+    <hr class="rule" />
+
+    <section>
+      <h2>Week 5 Results</h2>
+      <p class="muted">This table contains the latest Top-25 output from the model.</p>
+
+      <table aria-label="Top 25 Rankings">
+        <thead>
+          <tr><th>#</th><th>Team</th><th>WinsScore</th><th>AvgOppQ</th><th>Ranked Wins</th><th>Unranked Wins</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Ohio State</td><td>6.483846</td><td>0.784280</td><td>1</td><td>2</td></tr>
+          <tr><td>2</td><td>Miami</td><td>6.042997</td><td>0.558594</td><td>2</td><td>1</td></tr>
+          <tr><td>3</td><td>Ole Miss</td><td>5.919014</td><td>0.589099</td><td>1</td><td>4</td></tr>
+          <tr><td>4</td><td>Oregon</td><td>5.362571</td><td>0.485205</td><td>1</td><td>3</td></tr>
+          <tr><td>5</td><td>Indiana</td><td>5.168202</td><td>0.621062</td><td>1</td><td>3</td></tr>
+          <tr><td>6</td><td>Georgia Tech</td><td>5.115395</td><td>0.572482</td><td>1</td><td>3</td></tr>
+          <tr><td>7</td><td>Texas A&amp;M</td><td>5.027651</td><td>0.622097</td><td>1</td><td>3</td></tr>
+          <tr><td>8</td><td>LSU</td><td>4.560274</td><td>0.697644</td><td>1</td><td>2</td></tr>
+          <tr><td>9</td><td>Vanderbilt</td><td>4.420216</td><td>0.484360</td><td>1</td><td>3</td></tr>
+          <tr><td>10</td><td>Alabama</td><td>4.065496</td><td>0.644327</td><td>1</td><td>2</td></tr>
+          <tr><td>11</td><td>Iowa State</td><td>3.943081</td><td>0.447730</td><td>1</td><td>3</td></tr>
+          <tr><td>12</td><td>Oklahoma</td><td>3.575816</td><td>0.346020</td><td>2</td><td>1</td></tr>
+          <tr><td>13</td><td>BYU</td><td>3.156058</td><td>0.611589</td><td>0</td><td>3</td></tr>
+          <tr><td>14</td><td>Virginia</td><td>3.100408</td><td>0.536966</td><td>1</td><td>2</td></tr>
+          <tr><td>15</td><td>Missouri</td><td>2.582380</td><td>0.280620</td><td>1</td><td>3</td></tr>
+          <tr><td>16</td><td>Tennessee</td><td>2.515677</td><td>0.636716</td><td>0</td><td>3</td></tr>
+          <tr><td>17</td><td>South Florida</td><td>2.478906</td><td>0.411122</td><td>2</td><td>0</td></tr>
+          <tr><td>18</td><td>Mississippi State</td><td>2.446786</td><td>0.458587</td><td>1</td><td>2</td></tr>
+          <tr><td>19</td><td>Texas Tech</td><td>2.331774</td><td>0.309292</td><td>1</td><td>2</td></tr>
+          <tr><td>20</td><td>Illinois</td><td>2.314358</td><td>0.416827</td><td>1</td><td>2</td></tr>
+          <tr><td>21</td><td>Florida State</td><td>2.238444</td><td>0.593105</td><td>1</td><td>1</td></tr>
+          <tr><td>22</td><td>Louisville</td><td>2.003435</td><td>0.522662</td><td>0</td><td>3</td></tr>
+          <tr><td>23</td><td>Tulane</td><td>1.947693</td><td>0.454521</td><td>0</td><td>4</td></tr>
+          <tr><td>24</td><td>USC</td><td>1.873064</td><td>0.396782</td><td>0</td><td>4</td></tr>
+          <tr><td>25</td><td>Memphis</td><td>1.856452</td><td>0.376936</td><td>0</td><td>4</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr class="rule" />
+
+    <section>
+      <h2>Reproducibility</h2>
+      <ul>
+        <li><span class="kbd">cfbd</span> API with <span class="kbd">Coaches Poll</span> per-week lookups (no journalist polls).</li>
+        <li>Conference tiers from CFBD team metadata (Power-4: SEC, Big Ten, ACC, Big 12; Notre Dame treated as P4).</li>
+        <li>Margin capped at \(M=14\); road/neutral/home multipliers; close-loss relief with floor.</li>
+        <li>Full code embedded below.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Parameters (Current)</h2>
+      <ul>
+        <li>Ranked win boost: \(\beta = 0.70\); ranked loss discount: \(\delta = 0.40\)</li>
+        <li>Unranked win scales: P4 \(=0.85\), G5/Ind \(=0.40\)</li>
+        <li>Unranked loss multipliers: P4 \(=1.05\), G5/Ind \(=1.30\)</li>
+        <li>SOS multiplier: \(0.50 + 1.10\cdot \overline{Q}\)</li>
+        <li>Unranked wins decay: start after first, factor \(0.93\)</li>
+        <li>Margin cap \(M=14\), win margin factor \(\gamma=0.008\)</li>
+        <li>Close-loss relief floor \(\rho=0.70\), per-point relief \(\lambda=0.01\)</li>
+        <li>Location multipliers: Home \(0.985\), Neutral \(1.00\), Road \(1.04\)</li>
+      </ul>
+    </section>
+
+    </section>
+  </main>
+
+  <footer class="container">
+    <p class="muted">© <span id="yr"></span> Wins-First CFB Top-25 — built for transparency and reproducibility.</p>
+  </footer>
+
+  <script>
+    // Tiny footer year
+    document.getElementById('yr').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
