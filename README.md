@@ -1,1 +1,1 @@
-[CFBRANK.ORG](cfbrank.org)
+CFBRANK.ORG
