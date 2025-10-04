@@ -1,1 +1,1 @@
-[CFB RANK . ORG](cfbrank.org)
+[CFBRANK.ORG](cfbrank.org)
