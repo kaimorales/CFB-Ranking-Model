@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Compare (Week 6) — cfbrank.org</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Week 6 comparison of the Wins-First model versus the AP Top-25 using game outcomes." />
+  <style>
+    :root {
+      --bg:#ffffff; --ink:#111; --muted:#555; --rule:#e6e6e6; --accent:#0b5fff;
+      --mono: ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+      --sans: system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif;
+      --maxw: 920px;
+    }
+    html,body{background:var(--bg);color:var(--ink);margin:0;padding:0}
+    body{font-family:var(--sans);line-height:1.6}
+    header,footer{border-bottom:1px solid var(--rule)}
+    footer{border-top:1px solid var(--rule);border-bottom:0}
+    .container{max-width:var(--maxw);margin:0 auto;padding:24px 16px}
+    h1,h2,h3{line-height:1.25;margin:0.6em 0 0.3em}
+    h1{font-size:1.9rem}
+    h2{font-size:1.35rem;margin-top:1.25rem}
+    h3{font-size:1.12rem;margin-top:1rem}
+    p{margin:0.5rem 0}
+    .muted{color:var(--muted)}
+    .pill{display:inline-block;background:#f4f7ff;color:#183a9e;border:1px solid #dfe7ff;border-radius:999px;padding:2px 10px;font-size:.85rem}
+    .rule{height:1px;background:var(--rule);border:0;margin:1.25rem 0}
+    table{width:100%;border-collapse:collapse;font-size:.95rem;margin:0.75rem 0}
+    th,td{border-bottom:1px solid var(--rule);padding:8px 6px;text-align:left}
+    th{background:#fcfcfc;font-weight:600}
+    code{font-family:var(--mono)}
+    ul.inline{padding-left:1rem;margin:0.4rem 0}
+    ul.inline li{margin:0.2rem 0}
+    .badge{font-size:0.78rem;border:1px solid var(--rule);padding:2px 8px;border-radius:999px}
+    .good{color:#0a7a20}
+    .warn{color:#a52222}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .back{font-size:.95rem}
+  </style>
+  <!-- Optional: MathJax in case you reference any formulas here -->
+  <script>
+    window.MathJax = { tex:{inlineMath:[['$','$'],['\\(','\\)']]}, svg:{fontCache:'global'} };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="pill">Wins-First CFB Top-25 (Comparison)</div>
+      <h1>Week 6 — Model vs AP Top-25</h1>
+      <p class="muted">
+        Focused, Top-25-only comparison using this week’s outcomes. The model ranks teams by <em>results at the time they happened</em> (Coaches Poll week-of-game), with P4/G5 weighting and SOS scaling.
+      </p>
+      <p class="back"><a href="index.html">← Back to current rankings</a> &middot; <a href="weeks.html">Past weeks</a></p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section>
+      <h2>Executive Summary</h2>
+      <ul class="inline">
+        <li><strong class="good">Over-ranked flags validated:</strong> <u>Texas (AP #9)</u> and <u>Penn State (AP #7)</u> were <em>outside</em> my Top-25 and both <strong>lost to AP-unranked teams</strong> this week.</li>
+        <li>Across shared teams, the model diverges where résumés differ: ranked wins, week-specific opponent quality, and SOS—<em>not</em> brand reputation.</li>
+      </ul>
+    </section>
+
+    <hr class="rule" />
+
+    <section>
+      <h2>Who We Disagreed On</h2>
+    
+      <h3>AP-Only (model had them outside Top-25)</h3>
+      <p class="muted">Two of these lost this week to AP-unranked opponents (bold).</p>
+      <ul>
+        <li><strong>Texas (AP #9)</strong> — lost to Florida (AP-unranked). The model excluded Texas before kickoff, flagging the lack of ranked wins and inflated perception.</li>
+        <li><strong>Penn State (AP #7)</strong> — lost to UCLA (AP-unranked). The model already viewed PSU as overrated relative to performance and résumé.</li>
+        <li>Georgia (AP #12)</li>
+        <li>Michigan (AP #20)</li>
+        <li>Notre Dame (AP #21)</li>
+        <li>Arizona State (AP #25)</li>
+      </ul>
+    
+      <h3>Model-Only (AP had them outside Top-25)</h3>
+      <ul>
+        <li>South Florida (#17) — dominant 54–26 win over Charlotte and already held two ranked wins.</li>
+        <li>Mississippi State (#18) — earned prior ranked-win credit; lost a tough matchup to Texas A&M (AP #6), loss was expected.</li>
+        <li>Louisville (#22) — <strong>OT loss</strong> to Virginia (Model #14, AP #24), supporting the model’s higher evaluation of UVA and the notion that Louisville can compete with ranked teams.</li>
+        <li>Tulane (#23)</li>
+        <li>USC (#24)</li>
+        <li>Memphis (#25) — crushed Tulsa 45–7, validating the model’s inclusion even as a Group-of-5 team under stricter weighting.</li>
+      </ul>
+    
+      <p class="muted">
+        In short, the model correctly flagged both <strong>Texas</strong> and <strong>Penn State</strong> as overvalued before their losses — while elevating teams like South Florida and Louisville that proved stronger on-field.  
+        Its reliance on week-of-game data and opponent strength, not brand names, produced a more reality-aligned Top 25.
+      </p>
+    </section>
+    
+    
+
+    <hr class="rule" />
+
+    <section>
+      <h2>Shared Teams: Rank Deltas</h2>
+      <p class="muted">Δ = Model Rank − AP Rank (negative = model ranks a team higher).</p>
+
+      <table aria-label="Model vs AP Rank Deltas (Week 6)">
+        <thead>
+          <tr>
+            <th>Model Rank</th><th>Team</th><th>AP Rank</th><th>Δ</th><th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Ohio State</td><td>1</td><td>0</td><td>Consensus #1</td></tr>
+          <tr><td>2</td><td>Miami</td><td>3</td><td class="good">−1</td><td>Two ranked wins</td></tr>
+          <tr><td>3</td><td>Ole Miss</td><td>4</td><td class="good">−1</td><td>Undefeated + ranked win</td></tr>
+          <tr><td>4</td><td>Oregon</td><td>2</td><td class="warn">+2</td><td>Model a bit more conservative</td></tr>
+          <tr><td>5</td><td>Indiana</td><td>8</td><td class="good">−3</td><td>Résumé > reputation</td></tr>
+          <tr><td>6</td><td>Georgia Tech</td><td>17</td><td class="good">−11</td><td>Biggest positive delta; strong wins</td></tr>
+          <tr><td>7</td><td>Texas A&amp;M</td><td>6</td><td>+1</td><td>Near alignment</td></tr>
+          <tr><td>8</td><td>LSU</td><td>13</td><td class="good">−5</td><td>Opponent quality matters</td></tr>
+          <tr><td>9</td><td>Vanderbilt</td><td>16</td><td class="good">−7</td><td>Undefeated résumé rewarded</td></tr>
+          <tr><td>10</td><td>Alabama</td><td>10</td><td>0</td><td>Aligned</td></tr>
+          <tr><td>11</td><td>Iowa State</td><td>14</td><td class="good">−3</td><td>Undefeated résumé</td></tr>
+          <tr><td>12</td><td>Oklahoma</td><td>5</td><td class="warn">+7</td><td>Model more skeptical</td></tr>
+          <tr><td>13</td><td>BYU</td><td>23</td><td class="good">−10</td><td>Undervalued by AP</td></tr>
+          <tr><td>14</td><td>Virginia</td><td>24</td><td class="good">−10</td><td>Undervalued by AP</td></tr>
+          <tr><td>15</td><td>Missouri</td><td>19</td><td class="good">−4</td><td>Model credits results</td></tr>
+          <tr><td>16</td><td>Tennessee</td><td>15</td><td>+1</td><td>Near alignment</td></tr>
+          <tr><td>19</td><td>Texas Tech</td><td>11</td><td class="warn">+8</td><td>Model more skeptical</td></tr>
+          <tr><td>20</td><td>Illinois</td><td>22</td><td class="good">−2</td><td>Resume support</td></tr>
+          <tr><td>21</td><td>Florida State</td><td>18</td><td class="warn">+3</td><td>Model penalizes losses/quality</td></tr>
+        </tbody>
+      </table>
+
+      <p class="muted">
+        Summary on shared 19 teams: <strong>MAD = 4.16</strong>, <strong>Spearman ρ ≈ 0.71</strong>.
+        The model correlates, but it meaningfully diverges where résumés (ranked wins, week-specific opponent quality, SOS) differ from reputation.
+      </p>
+    </section>
+
+    <hr class="rule" />
+
+    <section>
+      <h2>Outcome Validation (Week 6)</h2>
+      <p>
+        The clearest test this week: the model identified <em>two AP Top-10 teams</em> as
+        <strong>over-ranked before kickoff</strong>—and both lost to AP-unranked opponents:
+      </p>
+      <ul class="inline">
+        <li><strong>Texas (AP #9):</strong> lost to <em>Florida</em>.</li>
+        <li><strong>Penn State (AP #7):</strong> lost to <em>UCLA</em>.</li>
+      </ul>
+      <p>
+        That’s exactly the aim of a wins-first system: reward teams for <em>what they’ve done</em> (ranked wins at the time,
+        strong opponents, SOS) and down-weight brand reputation. Week-of-game opponent quality (via Coaches Poll) ensures
+        upsets are valued when they happened—not retroactively.
+      </p>
+    </section>
+
+    <hr class="rule" />
+
+    <section>
+      <h2>Why the Model Outperforms Poll Heuristics</h2>
+      <ul class="inline">
+        <li><strong>Week-specific quality:</strong> opponent strength \(Q\) is taken from the <em>Coaches Poll at game time</em>, not end-of-season hindsight.</li>
+        <li><strong>Ranked-win emphasis:</strong> multiplicative boost for ranked wins and discounted penalties for ranked losses.</li>
+        <li><strong>Conference tiering for unranked:</strong> unranked P4 wins &gt; unranked G5 wins; G5 losses sting more.</li>
+        <li><strong>SOS scaling:</strong> season-level multiplier favors teams who schedule (and beat) stronger opponents.</li>
+        <li><strong>Diminishing returns:</strong> curbs padding against unranked G5 teams.</li>
+      </ul>
+      <p class="muted">
+        Result: teams like <strong>Georgia Tech</strong> and <strong>Vanderbilt</strong> get properly credited for real wins,
+        while teams elevated by reputation alone (e.g., <strong>Texas</strong>, <strong>Penn State</strong>) are not protected.
+      </p>
+    </section>
+  </main>
+
+  <footer class="container">
+    <p class="muted">© <span id="yr"></span> Wins-First CFB Top-25 — Week 6 comparison.</p>
+  </footer>
+  <script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+</body>
+</html>
