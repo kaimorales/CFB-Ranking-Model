@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>cfbrank.org (CFB Top-25 — Methodology & Results)</title>
+  <title>Wins-First CFB Top-25 — Methodology & Results</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Transparent, wins-first college football Top-25 ranking model using week-of-game Coaches Poll ranks, P4/G5 weighting, SOS scaling, and diminishing returns on unranked wins." />
   <style>
@@ -56,7 +56,7 @@
   <header>
     <div class="container">
       <div class="pill">Wins-First CFB Top-25 (Kai Morales)</div>
-      <h1>Beyond the Polls: An Analytical Model for CFB Rankings</h1>
+      <h1>Methodology, Formulas, Algorithm & Weekly Results</h1>
       <p class="muted">An objective, reproducible ranking model: week-of-game <em>Coaches Poll</em> ranks, Power-4 weighting, schedule strength, and diminishing returns on unranked wins.</p>
     </div>
   </header>
@@ -98,65 +98,116 @@
     <hr class="rule" />
 
     <section>
-      <h2>Formulas</h2>
-
-      <h3>Opponent Rank Quality</h3>
-      <p>
-        Rank quality \(rq\) (1 is best) maps to \([0,1]\):
-      </p>
-      <p>
-        $$ rq(r) = 1 - \frac{r - 1}{24} \quad \text{for } r \in \{1,\dots,25\}. $$
-      </p>
-
-      <h3>Per-Game Value</h3>
-      <p><strong>Win:</strong></p>
-      <p>
-        $$ \text{base}_W = \bigl(1 + \alpha_W \cdot Q_{\text{opp}}\bigr)\cdot L \cdot \bigl(1 + \gamma \cdot \min(m, M)\bigr) $$
-        $$ \text{value}_W =
+        <h2>Formulas</h2>
+      
+        <h3>Opponent Rank Quality (week-of-game)</h3>
+        <p>Rank quality \(rq\) (1 is best) maps to \([0,1]\):</p>
+        <p>
+          $$ rq(r) = 1 - \frac{r - 1}{24}, \quad r \in \{1,\dots,25\}. $$
+        </p>
+      
+        <h3>Location &amp; Margin</h3>
+        <p>
+          Location multiplier:
+          $$ L=\begin{cases}
+            1.04 & \text{Road} \\
+            1.00 & \text{Neutral} \\
+            0.985 & \text{Home}
+          \end{cases} $$
+          Margin is capped: \( m'=\min(m,\,14) \).
+        </p>
+        <p><strong>Win margin bonus:</strong>
+          $$ \text{WinMargin}(m') = 1 + \gamma \cdot m', \quad \gamma = 0.008. $$
+        </p>
+        <p><strong>Close-loss relief (with floor \(\rho\)):</strong>
+          $$ \text{Relief}(m') = \max\!\bigl(\rho,\; 1 - \lambda \cdot m'\bigr), \quad \rho=0.70,\;\lambda=0.01. $$
+        </p>
+      
+        <h3>Ranked Scaling</h3>
+        <p>
+          Ranked wins get a multiplicative boost; ranked losses get a discount:
+          $$ \text{WinBoost} = 1 + \beta \cdot rq, \qquad \text{LossDiscount} = 1 - \delta \cdot rq, $$
+          with \(\beta=0.70\), \(\delta=0.40\).
+        </p>
+      
+        <h3>Unranked Opponent Tiering (P4 vs G5/Ind)</h3>
+        <p>
+          For <em>unranked</em> opponents, apply conference-tier multipliers:
+          $$ s_{\text{win}}=\begin{cases}
+            0.85 & \text{P4 opponent} \\
+            0.40 & \text{G5/Independent}
+          \end{cases}
+          \qquad
+          k_{\text{loss}}=\begin{cases}
+            1.05 & \text{P4 opponent} \\
+            1.30 & \text{G5/Independent}
+          \end{cases} $$
+        </p>
+      
+        <h3>Per-Game Value</h3>
+        <p><strong>Win:</strong></p>
+        <p>
+          $$ \text{base}_W = \bigl(1 + \alpha_W \, Q_{\text{opp}}\bigr)\, L \,\text{WinMargin}(m'),
+             \quad \alpha_W=0.6 $$
+          $$ \text{value}_W =
+              \begin{cases}
+                \text{base}_W \cdot s_{\text{win}} \cdot \text{WinBoost}, & \text{opp unranked (tiered)} \\\\
+                \text{base}_W \cdot \text{WinBoost}, & \text{opp ranked}
+              \end{cases}
+          $$
+        </p>
+      
+        <p><strong>Loss:</strong></p>
+        <p>
+          $$ \text{base}_L = \bigl(B + \alpha_L \, Q_{\text{opp}}\bigr)\, L \,\text{Relief}(m'),
+             \quad B=0.90,\; \alpha_L=0.3 $$
+          $$ \text{value}_L =
+              \begin{cases}
+                -\text{base}_L \cdot k_{\text{loss}} \cdot \text{LossDiscount}, & \text{opp unranked (tiered)} \\\\
+                -\text{base}_L \cdot \text{LossDiscount}, & \text{opp ranked}
+              \end{cases}
+          $$
+        </p>
+      
+        <ul class="muted">
+          <li>\(Q_{\text{opp}}\): opponent quality for that week (Coaches Poll; fallback SRS/win%).</li>
+          <li>\(L\): location multiplier (Road &gt; Neutral &gt; Home).</li>
+          <li>\(m\): raw margin; \(m'=\min(m,14)\) is the capped margin.</li>
+          <li>\(rq\): rank quality from week-of-game rank.</li>
+        </ul>
+      
+        <h3>Season-Level Adjustments</h3>
+        
+        <p>Soft clamp (schedule + no ranked wins):
+            $$ \text{WinsScore} \leftarrow
             \begin{cases}
-              \text{base}_W \cdot s_{\text{P4}} \cdot \bigl(1 + \beta \cdot rq\bigr), & \text{if opp unranked P4} \\\\
-              \text{base}_W \cdot s_{\text{G5}} \cdot \bigl(1 + \beta \cdot rq\bigr), & \text{if opp unranked G5/Ind} \\\\
-              \text{base}_W \cdot \bigl(1 + \beta \cdot rq\bigr), & \text{if opp ranked}
+              0.90 \cdot \text{WinsScore}, & \text{if } \text{RankedWins}=0 \text{ and } \overline{Q}_t < 0.55 \\
+              \text{WinsScore}, & \text{otherwise}
             \end{cases}
-        $$
-      </p>
-
-      <p><strong>Loss:</strong></p>
-      <p>
-        $$ \text{base}_L = \bigl(B + \alpha_L \cdot Q_{\text{opp}}\bigr)\cdot L \cdot \max\bigl(\rho,\; 1 - \lambda \cdot \min(m,M)\bigr) $$
-        $$ \text{value}_L =
-            \begin{cases}
-              -\text{base}_L \cdot k_{\text{P4}} \cdot \bigl(1 - \delta \cdot rq\bigr), & \text{if opp unranked P4} \\\\
-              -\text{base}_L \cdot k_{\text{G5}} \cdot \bigl(1 - \delta \cdot rq\bigr), & \text{if opp unranked G5/Ind} \\\\
-              -\text{base}_L \cdot \bigl(1 - \delta \cdot rq\bigr), & \text{if opp ranked}
-            \end{cases}
-        $$
-      </p>
-
-      <ul class="muted">
-        <li>\(Q_{\text{opp}}\): opponent quality (Coaches Poll or fallback SRS/win%).</li>
-        <li>\(L\): location multiplier (Road &gt; Neutral &gt; Home).</li>
-        <li>\(m\) margin, capped by \(M\).</li>
-        <li>\(rq\): rank quality for week-of-game rank.</li>
-      </ul>
-
-      <h3>Season-Level Adjustments</h3>
-      <p>
-        SOS multiplier (with average opponent quality \(\overline{Q}\)):
-        $$ \text{SOS}(\overline{Q}) = 0.50 + 1.10 \cdot \overline{Q}. $$
-      </p>
-      <p>
-        Diminishing returns on unranked wins (starting after the first):
-        $$ d(n) = 0.93^{\max(0, n-1)}. $$
-      </p>
-      <p><strong>Final:</strong></p>
-      <p>
-        $$ \text{WinsScore}(t) = \Bigl(\sum_{g \in \text{games}(t)} \text{value}_g\Bigr)
-           \cdot \text{SOS}\!\left(\overline{Q}_{t}\right)
-           \cdot d\!\left(\text{UnrankedWins}_t\right)
-           + \kappa \cdot \text{RankedWins}_t \cdot \bigl(0.7 + 0.3\,\overline{Q}_{\text{ranked},t}\bigr). $$
-      </p>
-    </section>
+            $$
+          </p>
+          
+        <p>
+          Strength-of-schedule multiplier (with average opponent quality \(\overline{Q}\)):
+          $$ \text{SOS}(\overline{Q}) = 0.50 + 1.10 \cdot \overline{Q}. $$
+        </p>
+        <p>
+          Diminishing returns on unranked wins (starting after the first):
+          $$ d(n) = 0.93^{\max(0,\,n-1)}. $$
+        </p>
+        <p>
+          Ranked-win additive kicker (scaled by ranked-opponent quality):
+          $$ \text{Kicker} = \kappa \cdot \text{RankedWins} \cdot \bigl(0.7 + 0.3\,\overline{Q}_{\text{ranked}}\bigr), \quad \kappa=0.30. $$
+        </p>
+      
+        <h3>Final Score</h3>
+        <p>
+          $$ \text{WinsScore}(t) =
+             \Bigl(\sum_{g \in \text{games}(t)} \text{value}_g\Bigr)\cdot
+             \text{SOS}\!\left(\overline{Q}_{t}\right)\cdot
+             d\!\left(\text{UnrankedWins}_{t}\right) + \text{Kicker}. $$
+        </p>
+      </section>      
 
     <hr class="rule" />
 
@@ -222,7 +273,7 @@
         <li><span class="kbd">cfbd</span> API with <span class="kbd">Coaches Poll</span> per-week lookups (no journalist polls).</li>
         <li>Conference tiers from CFBD team metadata (Power-4: SEC, Big Ten, ACC, Big 12; Notre Dame treated as P4).</li>
         <li>Margin capped at \(M=14\); road/neutral/home multipliers; close-loss relief with floor.</li>
-        <li>Full code on my Github.</li>
+        <li>Full code embedded below.</li>
       </ul>
     </section>
 
