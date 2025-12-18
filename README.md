@@ -1,1 +1,1 @@
-CFBRANK.ORG
+read more at cfbrank.org
